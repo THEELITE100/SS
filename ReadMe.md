@@ -1,10 +1,8 @@
 # 🌐 SkillSphere
 
-**An AI-Powered Hyperlocal Freelance Ecosystem**
+**An AI-Powered Freelance Ecosystem**
 
 SkillSphere is an enterprise-grade, full-stack MERN platform designed to connect hiring clients with verified local professionals. Moving beyond basic filtering, the platform leverages Hugging Face semantic vector matching, real-time Socket.IO collaboration workspaces, MongoDB geospatial indexing, and a Stripe Connect escrow ledger to create a secure, high-end freelance marketplace.
-
-Designed with a premium, minimalist Apple/Tesla-inspired user interface, SkillSphere prioritizes clarity, performance, and trust.
 
 ---
 
