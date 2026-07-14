@@ -1,89 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../utils/apiClient';
 import GlassCard from '../components/common/GlassCard';
 import Button from '../components/common/Button';
 
-const fallbackProposals = [
-  {
-    _id: 'prop_101',
-    gig: {
-      _id: 'gig_1',
-      title: 'Senior React & Tailwind Developer for Luxury Dashboard',
-      budgetRange: { min: 80000, max: 150000 },
-    },
-    freelancer: {
-      _id: 'free_1',
-      name: 'Aarav Sharma',
-      email: 'aarav@skillsphere.io',
-      profile: {
-        headline: 'Senior MERN & AI Architect',
-        reputationScore: 4.9,
-        skills: ['React', 'Node.js', 'Tailwind CSS', 'Redux Toolkit'],
-      },
-    },
-    bidAmount: 125000,
-    estimatedDays: 14,
-    aiMatchScore: 96,
-    status: 'submitted',
-    coverLetter: 'I have architected over 15 Apple-inspired minimalist web applications across Noida and NCR. My tech stack aligns 100% with your requirements, and I can deliver the initial architecture milestone within 5 business days.',
-    proposedMilestones: [
-      { title: 'Core UI & Redux State Setup', amount: 50000 },
-      { title: 'Backend API Integration & Escrow Polish', amount: 75000 },
-    ],
-    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-  },
-  {
-    _id: 'prop_102',
-    gig: {
-      _id: 'gig_2',
-      title: 'AI Machine Learning Engineer (HuggingFace Integration)',
-      budgetRange: { min: 120000, max: 250000 },
-    },
-    freelancer: {
-      _id: 'free_2',
-      name: 'Priya Patel',
-      email: 'priya@skillsphere.io',
-      profile: {
-        headline: 'AI/ML & Vector Embeddings Researcher',
-        reputationScore: 5.0,
-        skills: ['Python', 'HuggingFace', 'NLP', 'Vector DBs'],
-      },
-    },
-    bidAmount: 180000,
-    estimatedDays: 21,
-    aiMatchScore: 94,
-    status: 'under_negotiation',
-    coverLetter: 'My background includes optimizing semantic vector search models for enterprise hiring engines. I propose a 3-stage delivery model testing turnaround velocity anomalies.',
-    proposedMilestones: [
-      { title: 'Dataset Cleaning & Embedding Pipeline', amount: 60000 },
-      { title: 'Model Fine-Tuning & Evaluation', amount: 60000 },
-      { title: 'Production Deployment API', amount: 60000 },
-    ],
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-  },
-];
-
 const ClientProposalsPage = () => {
+  const [proposals, setProposals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ALL');
   const [adjudicatingId, setAdjudicatingId] = useState(null);
   const navigate = useNavigate();
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['clientProposals'],
-    queryFn: async () => {
-      try {
-        const res = await apiClient.get('/proposals/client/my-proposals');
-        if (!res.data || res.data.length === 0) return fallbackProposals;
-        return res.data;
-      } catch (err) {
-        return fallbackProposals;
-      }
-    },
-  });
+  const fetchProposals = async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient.get('/proposals/client/my-proposals');
+      setProposals(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch real proposals:', err);
+      setProposals([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const proposals = data || fallbackProposals;
+  useEffect(() => {
+    fetchProposals();
+  }, []);
 
   const filteredProposals = proposals.filter((p) => {
     if (activeTab === 'ALL') return true;
@@ -94,7 +38,16 @@ const ClientProposalsPage = () => {
   });
 
   const handleAcceptBid = async (proposal) => {
-    if (!window.confirm(`Are you sure you want to accept ${proposal.freelancer?.name}'s bid of ₹${proposal.bidAmount.toLocaleString('en-IN')}? This will lock the project and initialize the execution tracker.`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to accept ${
+          proposal.freelancer?.name || 'this specialist'
+        }'s bid of ₹${proposal.bidAmount?.toLocaleString(
+          'en-IN'
+        )}? This will lock the project and initialize the execution tracker.`
+      )
+    )
+      return;
 
     setAdjudicatingId(proposal._id);
     try {
@@ -104,8 +57,8 @@ const ClientProposalsPage = () => {
       navigate(`/dashboard/tracker/${proposal.gig?._id || 'mock_gig'}`);
     } catch (err) {
       setAdjudicatingId(null);
-      alert('Proposal Accepted! Redirecting to Project Execution Tracker...');
-      navigate(`/dashboard/tracker/${proposal.gig?._id || 'mock_gig'}`);
+      alert('Error accepting proposal. Please try again.');
+      console.error(err);
     }
   };
 
@@ -113,9 +66,11 @@ const ClientProposalsPage = () => {
     if (!window.confirm('Are you sure you want to reject this proposal?')) return;
     try {
       await apiClient.put(`/proposals/${proposalId}/reject`);
-      refetch();
-    } catch (err) {
       alert('Proposal status updated to Rejected.');
+      fetchProposals();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update proposal status.');
     }
   };
 

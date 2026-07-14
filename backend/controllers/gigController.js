@@ -3,14 +3,38 @@ const Proposal = require('../models/Proposal');
 
 const createGig = async (req, res) => {
   try {
-    const gigData = {
-      ...req.body,
-      client: req.user._id,
-    };
-    const gig = await Gig.create(gigData);
-    res.status(201).json(gig);
+    const { title, description, category, maxBudget } = req.body;
+
+    if (!title || !description || !maxBudget) {
+      return res.status(400).json({ message: 'Please provide title, description, and budget.' });
+    }
+
+    const newGig = await Gig.create({
+      title,
+      description,
+      category: category || 'Web Development',
+      maxBudget: Number(maxBudget),
+      status: 'Open'
+    });
+
+    return res.status(201).json({
+      message: 'Project published successfully.',
+      gig: newGig
+    });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Create Gig Error:', error);
+    return res.status(500).json({ message: 'Server error while publishing project.' });
+  }
+};
+
+const getGigs = async (req, res) => {
+  try {
+    const gigs = await Gig.find().sort({ createdAt: -1 });
+    return res.status(200).json(gigs);
+  } catch (error) {
+    console.error('Fetch Gigs Error:', error);
+    return res.status(500).json({ message: 'Failed to retrieve marketplace data.' });
   }
 };
 
@@ -120,4 +144,27 @@ const acceptProposal = async (req, res) => {
   });
 };
 
-module.exports = { createGig, submitProposal, negotiateProposal, acceptProposal };
+const deleteGig = async (req, res) => {
+  try {
+    const gigId = req.params.id;
+    const deletedGig = await Gig.findByIdAndDelete(gigId);
+    
+    if (!deletedGig) {
+      return res.status(404).json({ message: 'Project not found.' });
+    }
+
+    return res.status(200).json({ message: 'Project securely deleted.' });
+  } catch (error) {
+    console.error('Delete Gig Error:', error);
+    return res.status(500).json({ message: 'Failed to delete project.' });
+  }
+};
+
+module.exports = { 
+  createGig, 
+  getGigs,
+  deleteGig,
+  submitProposal, 
+  negotiateProposal, 
+  acceptProposal 
+};

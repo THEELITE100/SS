@@ -3,22 +3,11 @@ import apiClient from '../utils/apiClient';
 import GlassCard from '../components/common/GlassCard';
 import Button from '../components/common/Button';
 
-// const fallbackUsers = [
-//   { _id: 'u_101', name: 'Aarav Sharma', email: 'aarav@skillsphere.io', role: 'freelancer', isVerified: true, isSuspended: false, earnings: 450000, rating: 4.9 },
-//   { _id: 'u_102', name: 'Priya Patel', email: 'priya@skillsphere.io', role: 'freelancer', isVerified: false, isSuspended: false, earnings: 280000, rating: 5.0 },
-//   { _id: 'u_103', name: 'TechHub Enterprise', email: 'client@skillsphere.io', role: 'client', isVerified: true, isSuspended: false, spent: 890000, rating: 4.8 },
-//   { _id: 'u_104', name: 'Rohan Verma', email: 'rohan@skillsphere.io', role: 'freelancer', isVerified: true, isSuspended: true, earnings: 120000, rating: 3.2 },
-// ];
-
-// const fallbackDisputes = [
-//   { _id: 'dsp_1', gigTitle: 'Full-Stack Node.js Architecture Audit', clientName: 'TechHub Enterprise', freelancerName: 'Rohan Verma', amount: 45000, reason: 'Turnaround delay exceeding 7 business days without repository commits.', status: 'open' },
-// ];
-
-const [users, setUsers] = useState([]);
-const [disputes, setDisputes] = useState([]);
-
 const AdminDashboardPage = () => {
-  const [activeTab, setActiveTab] = useState('USERS'); // 'USERS' or 'DISPUTES'
+  const storedUser = localStorage.getItem('userInfo');
+  const user = storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
+
+  const [activeTab, setActiveTab] = useState('USERS');
   const [users, setUsers] = useState(fallbackUsers);
   const [disputes, setDisputes] = useState(fallbackDisputes);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +15,11 @@ const AdminDashboardPage = () => {
 
   useEffect(() => {
     const fetchAdminData = async () => {
+      if (!user || user.role !== 'admin') {
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         const [usersRes, disputesRes] = await Promise.all([
           apiClient.get('/admin/users'),
@@ -39,7 +33,15 @@ const AdminDashboardPage = () => {
       }
     };
     fetchAdminData();
-  }, []);
+  }, [user]);
+  
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-72px)] text-xs font-bold text-red-600 uppercase tracking-widest">
+        Access Denied. Administrator authorization required.
+      </div>
+    );
+  }
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

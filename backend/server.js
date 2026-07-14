@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const dotenv = require('dotenv');
@@ -5,8 +7,12 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-
-dotenv.config();
+const paymentRoutes = require('./routes/paymentRoutes');
+const authRoutes = require('./routes/authRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const freelancerRoutes = require('./routes/freelancerRoutes');
+const gigRoutes = require('./routes/gigRoutes');
+const proposalRoutes = require('./routes/proposalRoutes');
 
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
@@ -63,6 +69,10 @@ app.use('/api/progress', require('./routes/progressRoutes'));
 app.use('/api/disputes', require('./routes/disputeRoutes'));
 app.use('/api/analytics/freelancer', require('./routes/freelancerAnalyticsRoutes'));
 app.use('/api/audit', require('./routes/auditRoutes'));
+app.use('/api/proposals', proposalRoutes);
+app.use('/api/freelancer', freelancerRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({

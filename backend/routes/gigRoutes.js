@@ -1,17 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const {
-  createGig,
-  submitProposal,
-  negotiateProposal,
-  acceptProposal,
-} = require('../controllers/gigController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { 
+  createGig, 
+  getGigs, 
+  deleteGig 
+} = require('../controllers/gigController'); 
 
-router.post('/', protect, authorize('client', 'admin'), createGig);
-router.post('/:gigId/proposals', protect, authorize('freelancer'), submitProposal);
-
-router.put('/proposals/:id/negotiate', protect, negotiateProposal);
-router.put('/proposals/:id/accept', protect, authorize('client'), acceptProposal);
+router.get('/', getGigs);
+router.post('/', createGig);
+router.delete('/:id', deleteGig); 
 
 module.exports = router;

@@ -19,9 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <SocketProvider>
           <App />
-        </SocketProvider>
       </QueryClientProvider>
     </Provider>
   </React.StrictMode>
