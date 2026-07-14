@@ -107,7 +107,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { socket } from '../../utils/socket';
+import { socket } from '../utils/socket';
 import GlassCard from '../components/common/GlassCard';
 import Button from '../components/common/Button';
 
