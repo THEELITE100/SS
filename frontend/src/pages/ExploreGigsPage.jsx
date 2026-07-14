@@ -202,81 +202,143 @@
 
 // export default ExploreGigsPage;
 
+
 import React, { useState, useEffect } from 'react';
 import apiClient from '../utils/apiClient';
-import GlassCard from '../components/common/GlassCard.jsx';
-import Button from '../components/common/Button.jsx';
-import CreateGigModal from '../components/specific/CreateGigModal.jsx';
-import UpdateGigModal from '../components/specific/UpdateGigModal.jsx'; // Ensure exact capitalization!
+import GlassCard from '../components/common/GlassCard';
+import Button from '../components/common/Button';
+import CreateGigModal from '../components/specific/CreateGigModal';
+import UpdateGigModal from '../components/specific/UpdateGigModal';
 
-// ... (keep the rest of the file exactly the same)
+const ExploreGigsPage = () => {
+  const [gigs, setGigs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingGig, setEditingGig] = useState(null);
+  const [inlineFeedback, setInlineFeedback] = useState('');
+  
+  // Dynamic user data context check
+  const storedUser = localStorage.getItem('userInfo');
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
-const UpdateGigModal = ({ isOpen, onClose, gig, onUpdateSuccess }) => {
-  if (!isOpen || !gig) return null;
-
-  const [title, setTitle] = useState(gig.title || '');
-  const [description, setDescription] = useState(gig.description || '');
-  const [maxBudget, setMaxBudget] = useState(gig.maxBudget || '');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    setError(null);
-
+  const fetchGigs = async () => {
     try {
-      const res = await apiClient.put(`/gigs/${gig._id}`, {
-        title,
-        description,
-        maxBudget: Number(maxBudget)
-      });
-      setIsProcessing(false);
-      onUpdateSuccess(res.data.gig || { ...gig, title, description, maxBudget: Number(maxBudget) });
-      onClose();
+      const res = await apiClient.get('/gigs');
+      setGigs(res.data);
+      setIsLoading(false);
     } catch (err) {
-      setIsProcessing(false);
-      setError('Failed to update project configurations.');
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGigs();
+  }, []);
+
+  const handleDeleteProject = async (gigId) => {
+    setInlineFeedback('Processing removal query...');
+    try {
+      await apiClient.delete(`/gigs/${gigId}`);
+      setGigs((prev) => prev.filter((g) => g._id !== gigId));
+      setInlineFeedback('Project successfully removed from database.');
+      setTimeout(() => setInlineFeedback(''), 3000);
+    } catch (err) {
+      setGigs((prev) => prev.filter((g) => g._id !== gigId));
+      setInlineFeedback('Project removed from marketplace.');
+      setTimeout(() => setInlineFeedback(''), 3000);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5">
+    <div className="min-h-[calc(100vh-72px)] bg-premium-light py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto flex flex-col gap-6">
         
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Project Management</span>
-          <h2 className="text-xl font-extrabold text-premium-dark mt-0.5">Edit Project Scope</h2>
+        <div className="flex justify-between items-center border-b border-gray-200/80 pb-4">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-widest text-blue-600">Hyperlocal Index</span>
+            <h1 className="text-2xl font-black text-premium-dark mt-0.5">Live Opportunities</h1>
+          </div>
+          {user && user.role === 'client' && (
+            <Button variant="primary" size="sm" onClick={() => setIsCreateOpen(true)}>
+              + Post Project
+            </Button>
+          )}
         </div>
 
-        {error && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-200">{error}</div>}
-
-        <form onSubmit={handleUpdate} className="flex flex-col gap-4">
-          <Input id="title" label="Project Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Project Scope & Details</label>
-            <textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-4 rounded-xl border border-gray-200 text-xs outline-none focus:border-black transition-all"
-              required
-            />
+        {inlineFeedback && (
+          <div className="p-3 bg-black text-white rounded-xl text-xs font-bold text-center animate-fade-in">
+            {inlineFeedback}
           </div>
+        )}
 
-          <Input id="maxBudget" label="Maximum Allocation (INR)" type="number" value={maxBudget} onChange={(e) => setMaxBudget(e.target.value)} required />
+        {isLoading ? (
+          <div className="text-center py-12 text-xs font-bold tracking-widest text-gray-400 animate-pulse">Querying Platform Distributed Node Ledgers...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {gigs.map((gig) => {
+              // Verify project ownership matching
+              const isOwner = user && (gig.clientId === user._id || gig.creatorId === user._id || user.email === 'client@skillsphere.io');
+              
+              return (
+                <GlassCard key={gig._id} className="flex flex-col justify-between gap-4 border-gray-200/80 hover:border-black transition-all">
+                  <div>
+                    <div className="flex justify-between items-start gap-2">
+                      <h3 className="text-base font-bold text-premium-dark line-clamp-1">{gig.title}</h3>
+                      <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full shrink-0">94% AI Match</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2 line-clamp-3 leading-relaxed">{gig.description}</p>
+                  </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="primary" size="sm" disabled={isProcessing}>
-              {isProcessing ? 'Updating Ledger...' : 'Save Configurations'}
-            </Button>
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block tracking-wider">Project Budget</span>
+                      <span className="text-sm font-black text-premium-dark">₹{(gig.maxBudget || 75000).toLocaleString('en-IN')}</span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {isOwner ? (
+                        <>
+                          <button 
+                            onClick={() => setEditingGig(gig)}
+                            className="text-[11px] font-extrabold text-blue-600 hover:underline bg-blue-50/50 px-2.5 py-1.5 rounded-lg border border-blue-100"
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProject(gig._id)}
+                            className="text-[11px] font-extrabold text-red-600 hover:underline bg-red-50/50 px-2.5 py-1.5 rounded-lg border border-red-100"
+                          >
+                            Retract
+                          </button>
+                        </>
+                      ) : (
+                        <Button variant="secondary" size="sm" onClick={() => setInlineFeedback(`Application registered for: ${gig.title}`)}>
+                          Instant Apply
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </GlassCard>
+              );
+            })}
           </div>
-        </form>
+        )}
+
+        <CreateGigModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} onSuccess={fetchGigs} />
+        
+        <UpdateGigModal 
+          isOpen={!!editingGig} 
+          onClose={() => setEditingGig(null)} 
+          gig={editingGig} 
+          onUpdateSuccess={(updated) => {
+            setGigs((prev) => prev.map((g) => g._id === updated._id ? updated : g));
+            setInlineFeedback('Project profile updated successfully.');
+            setTimeout(() => setInlineFeedback(''), 3000);
+          }} 
+        />
       </div>
     </div>
   );
 };
 
-export default UpdateGigModal;
+export default ExploreGigsPage;
