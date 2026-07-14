@@ -4,31 +4,40 @@ import apiClient from '../utils/apiClient';
 import GlassCard from '../components/common/GlassCard';
 import Button from '../components/common/Button';
 
-const fallbackAnalytics = {
-  kpis: {
-    totalEarnings: 345000,
-    activeProjects: 3,
-    profileViews: 1240,
-    jobSuccessRate: 98,
-    reputationScore: 4.9,
-  },
-  monthlyRevenue: [
-    { month: 'Jan', amount: 45000 },
-    { month: 'Feb', amount: 52000 },
-    { month: 'Mar', amount: 38000 },
-    { month: 'Apr', amount: 65000 },
-    { month: 'May', amount: 70000 },
-    { month: 'Jun', amount: 75000 },
-  ],
-  activeApplications: [
-    { _id: 'app_1', title: 'Senior React & Tailwind Developer', client: 'TechHub Noida', bid: 125000, status: 'accepted', progress: 65 },
-    { _id: 'app_2', title: 'AI Machine Learning Engineer', client: 'AI Labs NCR', bid: 180000, status: 'under_negotiation', progress: 20 },
-  ],
-  recentReviews: [
-    { _id: 'rev_1', clientName: 'Vikram Mehta', rating: 5.0, comment: 'Flawless execution on our real-time Socket.IO chat infrastructure. Highly recommended!' },
-    { _id: 'rev_2', clientName: 'Ananya Rao', rating: 4.8, comment: 'Great communication and solid MongoDB schema optimization.' },
-  ],
+// const fallbackAnalytics = {
+//   kpis: {
+//     totalEarnings: 345000,
+//     activeProjects: 3,
+//     profileViews: 1240,
+//     jobSuccessRate: 98,
+//     reputationScore: 4.9,
+//   },
+//   monthlyRevenue: [
+//     { month: 'Jan', amount: 45000 },
+//     { month: 'Feb', amount: 52000 },
+//     { month: 'Mar', amount: 38000 },
+//     { month: 'Apr', amount: 65000 },
+//     { month: 'May', amount: 70000 },
+//     { month: 'Jun', amount: 75000 },
+//   ],
+//   activeApplications: [
+//     { _id: 'app_1', title: 'Senior React & Tailwind Developer', client: 'TechHub Noida', bid: 125000, status: 'accepted', progress: 65 },
+//     { _id: 'app_2', title: 'AI Machine Learning Engineer', client: 'AI Labs NCR', bid: 180000, status: 'under_negotiation', progress: 20 },
+//   ],
+//   recentReviews: [
+//     { _id: 'rev_1', clientName: 'Vikram Mehta', rating: 5.0, comment: 'Flawless execution on our real-time Socket.IO chat infrastructure. Highly recommended!' },
+//     { _id: 'rev_2', clientName: 'Ananya Rao', rating: 4.8, comment: 'Great communication and solid MongoDB schema optimization.' },
+//   ],
+// };
+
+const emptyAnalytics = {
+  kpis: { totalEarnings: 0, activeProjects: 0, profileViews: 0, jobSuccessRate: 0, reputationScore: 0 },
+  monthlyRevenue: [],
+  activeApplications: [],
+  recentReviews: [],
 };
+
+const [data, setData] = useState(emptyAnalytics);
 
 const FreelancerDashboardPage = () => {
   const navigate = useNavigate();

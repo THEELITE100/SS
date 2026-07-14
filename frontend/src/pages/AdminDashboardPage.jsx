@@ -3,16 +3,19 @@ import apiClient from '../utils/apiClient';
 import GlassCard from '../components/common/GlassCard';
 import Button from '../components/common/Button';
 
-const fallbackUsers = [
-  { _id: 'u_101', name: 'Aarav Sharma', email: 'aarav@skillsphere.io', role: 'freelancer', isVerified: true, isSuspended: false, earnings: 450000, rating: 4.9 },
-  { _id: 'u_102', name: 'Priya Patel', email: 'priya@skillsphere.io', role: 'freelancer', isVerified: false, isSuspended: false, earnings: 280000, rating: 5.0 },
-  { _id: 'u_103', name: 'TechHub Enterprise', email: 'client@skillsphere.io', role: 'client', isVerified: true, isSuspended: false, spent: 890000, rating: 4.8 },
-  { _id: 'u_104', name: 'Rohan Verma', email: 'rohan@skillsphere.io', role: 'freelancer', isVerified: true, isSuspended: true, earnings: 120000, rating: 3.2 },
-];
+// const fallbackUsers = [
+//   { _id: 'u_101', name: 'Aarav Sharma', email: 'aarav@skillsphere.io', role: 'freelancer', isVerified: true, isSuspended: false, earnings: 450000, rating: 4.9 },
+//   { _id: 'u_102', name: 'Priya Patel', email: 'priya@skillsphere.io', role: 'freelancer', isVerified: false, isSuspended: false, earnings: 280000, rating: 5.0 },
+//   { _id: 'u_103', name: 'TechHub Enterprise', email: 'client@skillsphere.io', role: 'client', isVerified: true, isSuspended: false, spent: 890000, rating: 4.8 },
+//   { _id: 'u_104', name: 'Rohan Verma', email: 'rohan@skillsphere.io', role: 'freelancer', isVerified: true, isSuspended: true, earnings: 120000, rating: 3.2 },
+// ];
 
-const fallbackDisputes = [
-  { _id: 'dsp_1', gigTitle: 'Full-Stack Node.js Architecture Audit', clientName: 'TechHub Enterprise', freelancerName: 'Rohan Verma', amount: 45000, reason: 'Turnaround delay exceeding 7 business days without repository commits.', status: 'open' },
-];
+// const fallbackDisputes = [
+//   { _id: 'dsp_1', gigTitle: 'Full-Stack Node.js Architecture Audit', clientName: 'TechHub Enterprise', freelancerName: 'Rohan Verma', amount: 45000, reason: 'Turnaround delay exceeding 7 business days without repository commits.', status: 'open' },
+// ];
+
+const [users, setUsers] = useState([]);
+const [disputes, setDisputes] = useState([]);
 
 const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState('USERS'); // 'USERS' or 'DISPUTES'

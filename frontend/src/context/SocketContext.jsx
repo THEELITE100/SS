@@ -3,6 +3,9 @@ import { io } from 'socket.io-client';
 import { useSelector } from 'react-redux';
 
 const SocketContext = createContext();
+const socket = io(socketUrl, {
+  transports: ['websocket', 'polling']
+});
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
@@ -13,7 +16,7 @@ export const SocketProvider = ({ children }) => {
     let socketInstance;
 
     if (isAuthenticated && token) {
-      const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+      const socketUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5000';
 
       socketInstance = io(SOCKET_URL, {
         auth: { token },
