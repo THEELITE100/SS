@@ -203,9 +203,13 @@
 // export default ExploreGigsPage;
 
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../utils/apiClient';
-import Input from '../common/Input';
-import Button from '../common/Button';
+import apiClient from '../utils/apiClient';
+import GlassCard from '../components/common/GlassCard.jsx';
+import Button from '../components/common/Button.jsx';
+import CreateGigModal from '../components/specific/CreateGigModal.jsx';
+import UpdateGigModal from '../components/specific/UpdateGigModal.jsx'; // Ensure exact capitalization!
+
+// ... (keep the rest of the file exactly the same)
 
 const UpdateGigModal = ({ isOpen, onClose, gig, onUpdateSuccess }) => {
   if (!isOpen || !gig) return null;
