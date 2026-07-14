@@ -3,12 +3,13 @@ import apiClient from '../../utils/apiClient';
 import Button from '../common/Button';
 
 const DisputeModal = ({ isOpen, onClose, gigId, paymentId, onSuccess }) => {
-  if (!isOpen) return null;
 
   const [reason, setReason] = useState('POOR_QUALITY');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -46,7 +46,6 @@ const StarInput = ({ label, value, onChange }) => {
 };
 
 const CreateReviewModal = ({ isOpen, onClose, onSuccess, gigTitle = 'Senior React Portal', freelancerName = 'Aarav Sharma', freelancerId }) => {
-  if (!isOpen) return null;
 
   const [ratings, setRatings] = useState({
     quality: 5,
@@ -56,6 +55,8 @@ const CreateReviewModal = ({ isOpen, onClose, onSuccess, gigTitle = 'Senior Reac
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  if (!isOpen) return null;
 
   const compositeScore = ((ratings.quality * 0.5) + (ratings.communication * 0.25) + (ratings.timeliness * 0.25)).toFixed(1);
 

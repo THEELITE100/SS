@@ -4,7 +4,6 @@ import Input from '../common/Input';
 import Button from '../common/Button';
 
 const BookingModal = ({ isOpen, onClose, freelancer, onSuccess }) => {
-  if (!isOpen || !freelancer) return null;
 
   const availableSlots = freelancer.profile?.availability || [
     { day: 'Monday - Friday', timeSlot: '09:00 AM - 11:30 AM IST' },
@@ -21,6 +20,8 @@ const BookingModal = ({ isOpen, onClose, freelancer, onSuccess }) => {
   const [notes, setNotes] = useState('');
   const [isBooking, setIsBooking] = useState(false);
   const [error, setError] = useState(null);
+  
+  if (!isOpen || !freelancer) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

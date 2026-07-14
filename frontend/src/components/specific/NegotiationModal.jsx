@@ -6,7 +6,6 @@ import Button from '../common/Button';
 import GlassCard from '../common/GlassCard';
 
 const NegotiationModal = ({ isOpen, onClose, gig, onSuccess }) => {
-  if (!isOpen || !gig) return null;
 
   const [formData, setFormData] = useState({
     coverLetter: '',
@@ -20,6 +19,8 @@ const NegotiationModal = ({ isOpen, onClose, gig, onSuccess }) => {
   ]);
 
   const [error, setError] = useState(null);
+
+  if (!isOpen || !gig) return null;
 
   const proposalMutation = useMutation({
     mutationFn: async (payload) => {
