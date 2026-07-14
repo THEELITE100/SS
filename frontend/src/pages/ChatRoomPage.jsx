@@ -107,18 +107,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { socket } from '../../utils/socket';
 import GlassCard from '../components/common/GlassCard';
 import Button from '../components/common/Button';
-
-const SOCKET_SERVER_URL = import.meta.env.VITE_API_BASE_URL 
-  ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') 
-  : 'http://localhost:5000';
-
-const socket = io(SOCKET_SERVER_URL, {
-  transports: ['websocket', 'polling'],
-  autoConnect: true,
-});
 
 const ChatRoomPage = () => {
   const { roomId } = useParams();
@@ -137,14 +128,16 @@ const ChatRoomPage = () => {
 
     socket.emit('joinRoom', { roomId: roomId || 'general' });
 
-    socket.on('receiveMessage', (message) => {
+    const handleReceiveMessage = (message) => {
       setMessages((prev) => [...prev, message]);
-    });
+    };
+    
+    socket.on('receiveMessage', handleReceiveMessage);
 
     return () => {
       socket.off('connect');
       socket.off('disconnect');
-      socket.off('receiveMessage');
+      socket.off('receiveMessage', handleReceiveMessage);
       socket.emit('leaveRoom', { roomId: roomId || 'general' });
     };
   }, [roomId]);
@@ -174,6 +167,7 @@ const ChatRoomPage = () => {
     <div className="min-h-[calc(100vh-72px)] bg-premium-light py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto flex flex-col gap-4 h-[80vh]">
         
+        {/* Workspace Header */}
         <div className="flex items-center justify-between border-b border-gray-200/80 pb-4">
           <div>
             <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-600">Encrypted Channel</span>
@@ -189,8 +183,10 @@ const ChatRoomPage = () => {
           </div>
         </div>
 
+        {/* Chat Interface */}
         <GlassCard className="flex-1 flex flex-col !p-0 overflow-hidden border-gray-200/80 shadow-sm">
           
+          {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-gray-50/50">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400">
@@ -214,6 +210,7 @@ const ChatRoomPage = () => {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Input Area */}
           <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 flex gap-3">
             <input
               type="text"
