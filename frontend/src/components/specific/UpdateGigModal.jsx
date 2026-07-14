@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiClient from '../../utils/apiClient';
 import Input from '../common/Input';
 import Button from '../common/Button';
 
 const UpdateGigModal = ({ isOpen, onClose, gig, onUpdateSuccess }) => {
-  if (!isOpen || !gig) return null;
-
-  const [title, setTitle] = useState(gig.title || '');
-  const [description, setDescription] = useState(gig.description || '');
-  const [maxBudget, setMaxBudget] = useState(gig.maxBudget || '');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [maxBudget, setMaxBudget] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (gig) {
+      setTitle(gig.title || '');
+      setDescription(gig.description || '');
+      setMaxBudget(gig.maxBudget || '');
+    }
+  }, [gig]);
+
+  if (!isOpen || !gig) return null;
 
   const handleUpdate = async (e) => {
     e.preventDefault();
