@@ -12,7 +12,7 @@ exports.verifyEmail = async (req, res) => {
 
     if (user.isVerified) return res.status(400).json({ message: 'Account is already verified.' });
 
-    if (user.verificationOTP !== otp) {
+    if (String(user.verificationOTP) !== String(otp)) {
       return res.status(400).json({ message: 'Invalid OTP code.' });
     }
 
@@ -103,6 +103,14 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: 'This account is missing a password. Please register a new account.' });
     }
 
+    if (user.isVerified === false && user.verificationOTP) {
+      return res.status(403).json({ 
+        message: 'Verification pending. Please verify your email with the OTP sent to you.',
+        requiresOTP: true,
+        userId: user._id
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials. Incorrect password.' });
@@ -127,5 +135,80 @@ exports.loginUser = async (req, res) => {
   } catch (error) {
     console.error('Login Error:', error);
     res.status(500).json({ message: 'Server error during secure login.' });
+  }
+};
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    const deletedUser = await User.findByIdAndDelete(userId);
+    
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User identity not found in the system.' });
+    }
+
+    res.status(200).json({ message: 'Account and all associated data permanently erased.' });
+  } catch (error) {
+    console.error('Delete Account Error:', error);
+    res.status(500).json({ message: 'Server error during account destruction.' });
+  }
+};
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'No account found with this email.' });
+    }
+
+    const resetOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetExpire = Date.now() + 15 * 60 * 1000;
+    
+    await User.updateOne(
+      { email: email },
+      { $set: { resetPasswordOTP: resetOTP, resetPasswordExpire: resetExpire } }
+    );
+
+    console.log(`\n🔐 RESET OTP FOR ${email}: ${resetOTP}\n`);
+
+    res.status(200).json({ message: 'Password reset OTP sent to your email.' });
+  } catch (error) {
+    console.error('Forgot Password Error:', error);
+    res.status(500).json({ message: 'Error initiating password reset.' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    if (!user.resetPasswordOTP || String(user.resetPasswordOTP) !== String(otp)) {
+      return res.status(400).json({ message: 'Invalid or incorrect OTP.' });
+    }
+
+    if (user.resetPasswordExpire < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await User.updateOne(
+      { email: email },
+      { 
+        $set: { password: hashedPassword },
+        $unset: { resetPasswordOTP: "", resetPasswordExpire: "" }
+      }
+    );
+
+    res.status(200).json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (error) {
+    console.error('Reset Password Error:', error);
+    res.status(500).json({ message: 'Error resetting password.' });
   }
 };

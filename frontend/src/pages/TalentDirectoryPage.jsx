@@ -7,7 +7,7 @@ import GlassCard from '../components/common/GlassCard';
 const TalentDirectoryPage = () => {
   const navigate = useNavigate();
   
-  const storedUser = localStorage.getItem('userInfo');
+  const storedUser = sessionStorage.getItem('userInfo');
   const user = storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
 
   const [freelancers, setFreelancers] = useState([]);
@@ -16,16 +16,16 @@ const TalentDirectoryPage = () => {
   const [skillFilter, setSkillFilter] = useState('All');
   const [rateFilter, setRateFilter] = useState('All');
 
+  const [selectedTalent, setSelectedTalent] = useState(null);
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     const fetchTalent = async () => {
       try {
         const res = await apiClient.get('/freelancers/explore').catch(() => ({ data: [] }));
         
-        const demoData = res.data.length > 0 ? res.data : [
-          { _id: '1', name: 'Alice JS', title: 'React Expert', skills: ['React', 'Node'], hourlyRate: 2000, bio: '5 years building SPAs.' },
-          { _id: '2', name: 'Bob Design', title: 'UI/UX Lead', skills: ['Figma', 'UI/UX'], hourlyRate: 1500, bio: 'Apple-inspired design.' }
-        ];
-        setFreelancers(demoData);
+        setFreelancers(res.data || []);
       } finally {
         setIsLoading(false);
       }
@@ -50,6 +50,24 @@ const TalentDirectoryPage = () => {
     if (rateFilter === 'High') matchesRate = f.hourlyRate > 3000;
     return matchesSkill && matchesRate;
   });
+
+  const handleSendInvite = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await apiClient.post('/invitations', {
+        talentId: selectedTalent._id,
+        message: inviteMessage
+      });
+      alert(`Invitation successfully sent to ${selectedTalent.name}!`);
+      setSelectedTalent(null);
+      setInviteMessage('');
+    } catch (err) {
+      alert('Failed to send invitation.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-premium-light py-8 px-4 sm:px-6 lg:px-8">
@@ -116,7 +134,7 @@ const TalentDirectoryPage = () => {
                     <Button 
                       variant="primary" 
                       size="sm"
-                      onClick={() => enforceAuth(() => console.log('Contact opened'))}
+                      onClick={() => enforceAuth(() => setSelectedTalent(freelancer))}
                     >
                       Invite to Project
                     </Button>
@@ -124,6 +142,37 @@ const TalentDirectoryPage = () => {
                 </div>
               </GlassCard>
             ))
+          )}
+          {selectedTalent && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+              <GlassCard className="w-full max-w-lg !p-8 shadow-2xl relative">
+                <button 
+                  onClick={() => setSelectedTalent(null)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-black font-bold"
+                >
+                  ✕
+                </button>
+                <h2 className="text-xl font-black text-premium-dark mb-1">Invite Professional</h2>
+                <p className="text-xs text-gray-500 mb-6">Messaging: <span className="font-bold text-black">{selectedTalent.name}</span></p>
+                
+                <form onSubmit={handleSendInvite} className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-premium-dark block mb-2">Project Details & Offer</label>
+                    <textarea 
+                      required
+                      rows={5}
+                      value={inviteMessage}
+                      onChange={(e) => setInviteMessage(e.target.value)}
+                      placeholder={`Describe your project and why you want to hire ${selectedTalent.name}...`}
+                      className="w-full text-sm p-3 rounded-lg border border-gray-200 outline-none focus:border-black"
+                    />
+                  </div>
+                  <Button type="submit" variant="primary" disabled={isSubmitting}>
+                    {isSubmitting ? 'Transmitting...' : 'Send Secure Invitation'}
+                  </Button>
+                </form>
+              </GlassCard>
+            </div>
           )}
         </div>
       </div>

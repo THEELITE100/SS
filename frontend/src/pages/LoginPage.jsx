@@ -1,96 +1,132 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../utils/apiClient';
+import GlassCard from '../components/common/GlassCard';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
-import GlassCard from '../components/common/GlassCard';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: OTP & New Password
+  const [resetData, setResetData] = useState({ email: '', otp: '', newPassword: '' });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleResetChange = (e) => {
+    setResetData({ ...resetData, [e.target.name]: e.target.value });
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setStatusMessage({ type: '', text: '' });
-
     try {
-      const res = await apiClient.post('/auth/login', { email, password });
-      setIsLoading(false);
+      const res = await apiClient.post('/auth/login', formData);
+      sessionStorage.setItem('token', res.data.token);
+      sessionStorage.setItem('userInfo', JSON.stringify(res.data.user));
       
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('userInfo', JSON.stringify(res.data.user));
+      if (res.data.user.role === 'admin') navigate('/admin-dashboard');
+      else if (res.data.user.role === 'freelancer') navigate('/dashboard');
+      else navigate('/explore');
       
-      setStatusMessage({ type: 'success', text: 'Authentication successful. Redirecting to workspace...' });
-      
-      setTimeout(() => {
-        navigate('/gigs');
-        window.location.reload();
-      }, 1500);
     } catch (err) {
+      if (err.response?.status === 403 && err.response?.data?.requiresOTP) {
+        alert("Account pending verification. Please verify the OTP sent to your email.");
+      } else {
+        alert(err.response?.data?.message || 'Login failed.');
+      }
+    } finally {
       setIsLoading(false);
-      setStatusMessage({ 
-        type: 'error', 
-        text: err.response?.data?.message || 'Access Denied. Check credentials and try again.' 
-      });
+    }
+  };
+
+  const handleRequestReset = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/auth/forgot-password', { email: resetData.email });
+      alert('OTP sent to your email! (Check backend terminal if no email setup)');
+      setForgotStep(2);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to request reset.');
+    }
+  };
+
+  const handleConfirmReset = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/auth/reset-password', resetData);
+      alert('Password successfully reset! You can now log in.');
+      setIsForgotOpen(false);
+      setForgotStep(1);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reset password.');
     }
   };
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-premium-light flex items-center justify-center p-4">
-      <GlassCard className="w-full max-w-md !p-8 border-gray-200/80 shadow-2xl flex flex-col gap-6 animate-fade-in">
+      
+      <GlassCard className="w-full max-w-md !p-8 shadow-2xl">
+        <h1 className="text-2xl font-black text-premium-dark text-center mb-1">Welcome Back</h1>
+        <p className="text-xs text-gray-500 text-center mb-8">Sign in to your secure workspace.</p>
         
-        <div className="text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-premium-accent">Identity Verification</span>
-          <h1 className="text-2xl font-black text-premium-dark mt-1">Sign In to SkillSphere</h1>
-        </div>
-
-        {statusMessage.text && (
-          <div className={`p-4 rounded-xl text-xs font-bold text-center border transition-all ${
-            statusMessage.type === 'success' 
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-              : 'bg-red-50 text-red-600 border-red-200'
-          }`}>
-            {statusMessage.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            id="email"
-            label="Verified Email Address"
-            type="email"
-            placeholder="name@domain.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input
-            id="password"
-            label="Account Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+          <Input label="Email Address" type="email" name="email" required onChange={handleChange} />
           
-          <Button type="submit" variant="primary" size="md" fullWidth disabled={isLoading} className="mt-2">
-            {isLoading ? 'Decrypting Secure Token...' : 'Authenticate Account'}
+          <div>
+            <Input label="Password" type="password" name="password" required onChange={handleChange} />
+            <div className="flex justify-end mt-2">
+              <button 
+                type="button" 
+                onClick={() => setIsForgotOpen(true)}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          </div>
+
+          <Button type="submit" variant="primary" className="mt-2" disabled={isLoading}>
+            {isLoading ? 'Authenticating...' : 'Secure Login'}
           </Button>
         </form>
-
-        <p className="text-center text-xs text-gray-500 font-medium">
-          New to the ecosystem?{' '}
-          <Link to="/register" className="font-bold text-black hover:underline">
-            Create Verified Account
-          </Link>
-        </p>
-
       </GlassCard>
+
+      {isForgotOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <GlassCard className="w-full max-w-md !p-8 shadow-2xl relative">
+            
+            <button onClick={() => { setIsForgotOpen(false); setForgotStep(1); }} className="absolute top-4 right-4 text-gray-400 hover:text-black font-bold">✕</button>
+            <h2 className="text-xl font-black text-premium-dark mb-1">Reset Password</h2>
+            
+            {forgotStep === 1 ? (
+              <>
+                <p className="text-xs text-gray-500 mb-6">Enter your email to receive a secure recovery code.</p>
+                <form onSubmit={handleRequestReset} className="flex flex-col gap-4">
+                  <Input label="Email Address" type="email" name="email" required value={resetData.email} onChange={handleResetChange} />
+                  <Button type="submit" variant="primary">Send Recovery Code</Button>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-6">Enter the 6-digit code sent to <span className="font-bold text-black">{resetData.email}</span></p>
+                <form onSubmit={handleConfirmReset} className="flex flex-col gap-4">
+                  <Input label="6-Digit OTP" type="text" name="otp" required value={resetData.otp} onChange={handleResetChange} />
+                  <Input label="New Secure Password" type="password" name="newPassword" required value={resetData.newPassword} onChange={handleResetChange} />
+                  <Button type="submit" variant="primary">Confirm New Password</Button>
+                </form>
+              </>
+            )}
+
+          </GlassCard>
+        </div>
+      )}
+
     </div>
   );
 };

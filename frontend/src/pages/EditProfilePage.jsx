@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'
 import apiClient from '../utils/apiClient';
 import GlassCard from '../components/common/GlassCard';
 import Input from '../components/common/Input';
@@ -6,6 +7,9 @@ import Button from '../components/common/Button';
 import TwoFactorModal from '../components/specific/TwoFactorModal';
 
 const EditProfilePage = () => {
+  const navigate = useNavigate();
+  const storedUser = sessionStorage.getItem('userInfo');
+  const user = storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
   const [formData, setFormData] = useState({
     title: '',
     bio: '',
@@ -56,6 +60,29 @@ const EditProfilePage = () => {
       alert('Failed to update profile.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    const confirmDelete = window.confirm(
+      "⚠️ DANGER ZONE: Are you absolutely sure you want to permanently delete your account?\n\nAll your data, history, and access will be lost forever. This action CANNOT be undone."
+    );
+
+    if (confirmDelete) {
+      try {
+        await apiClient.delete(`/auth/delete-account/${user._id}`);
+        
+        sessionStorage.clear();
+        
+        alert("Your account has been permanently deleted.");
+        
+        navigate('/');
+        window.location.reload(); 
+      } catch (err) {
+        alert("Failed to delete account. Please try again.");
+      }
     }
   };
 
@@ -116,8 +143,23 @@ const EditProfilePage = () => {
                 {isSaving ? 'Syncing...' : 'Save Configurations'}
               </Button>
             </div>
-
           </form>
+          <div className="mt-12 pt-8 border-t-2 border-red-100 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-red-500 pb-2">Danger Zone</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-red-50 rounded-xl border border-red-200 gap-4">
+              <div>
+                <p className="text-sm font-bold text-red-700">Permanently Erase Account</p>
+                <p className="text-xs text-red-500 mt-1">This will instantly wipe your profile and database entries. Cannot be undone.</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={handleDeleteAccount}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-600 bg-white border border-red-200 rounded-lg shadow-sm hover:bg-red-600 hover:text-white transition-all whitespace-nowrap"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
         </GlassCard>
 
         <TwoFactorModal isOpen={is2FAOpen} onClose={() => setIs2FAOpen(false)} onSuccess={() => console.log('2FA Enabled')} />

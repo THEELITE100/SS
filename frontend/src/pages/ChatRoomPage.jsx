@@ -76,10 +76,8 @@ const ChatRoomPage = () => {
           </div>
         </div>
 
-        {/* Chat Interface */}
         <GlassCard className="flex-1 flex flex-col !p-0 overflow-hidden border-gray-200/80 shadow-sm">
           
-          {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-gray-50/50">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400">
@@ -103,7 +101,6 @@ const ChatRoomPage = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
           <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 flex gap-3">
             <input
               type="text"

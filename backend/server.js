@@ -13,6 +13,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const freelancerRoutes = require('./routes/freelancerRoutes');
 const gigRoutes = require('./routes/gigRoutes');
 const proposalRoutes = require('./routes/proposalRoutes');
+const invitationRoutes = require('./routes/invitationRoutes');
 
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
@@ -71,6 +72,7 @@ app.use('/api/analytics/freelancer', require('./routes/freelancerAnalyticsRoutes
 app.use('/api/audit', require('./routes/auditRoutes'));
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/freelancer', freelancerRoutes);
+app.use('/api/invitations', invitationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/auth', authRoutes);
 
@@ -80,6 +82,15 @@ app.get('/health', (req, res) => {
     platform: 'SkillSphere API Engine',
     timestamp: new Date().toISOString(),
   });
+});
+app.get('/api/admin/stats', (req, res) => {
+  res.json({ totalUsers: 0, totalGigs: 0, activeDisputes: 0, platformRevenue: 0 });
+});
+app.get('/api/analytics/freelancer/:id', (req, res) => {
+  res.json({ totalEarnings: 0, activeProjects: 0, pendingProposals: 0, recentActivity: [] });
+});
+app.get('/api/freelancers/explore', (req, res) => {
+  res.json([]); 
 });
 
 app.use(notFound);

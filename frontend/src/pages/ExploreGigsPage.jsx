@@ -8,7 +8,7 @@ import CreateGigModal from '../components/specific/CreateGigModal';
 const ExploreGigsPage = () => {
   const navigate = useNavigate();
   
-  const storedUser = localStorage.getItem('userInfo');
+  const storedUser = sessionStorage.getItem('userInfo');
   const user = storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
 
   const [gigs, setGigs] = useState([]);

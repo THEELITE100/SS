@@ -33,8 +33,8 @@ const RegisterPage = () => {
     setIsLoading(true);
     try {
       const res = await apiClient.post('/auth/verify-email', { userId, otp });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('userInfo', JSON.stringify(res.data.user));
+      sessionStorage.setItem('token', res.data.token);
+      sessionStorage.setItem('userInfo', JSON.stringify(res.data.user));
       navigate('/gigs');
     } catch (err) {
       alert('Invalid or expired OTP code.');

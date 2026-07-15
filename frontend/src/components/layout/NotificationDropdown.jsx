@@ -10,8 +10,7 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      // 1. Safe JSON Parse to prevent crash
-      const storedUser = localStorage.getItem('userInfo');
+      const storedUser = sessionStorage.getItem('userInfo');
       if (!storedUser || storedUser === 'undefined') return;
 
       try {
@@ -20,7 +19,6 @@ const NotificationDropdown = () => {
         setNotifications(liveNotifs);
         setUnreadCount(liveNotifs.filter((n) => !n.isRead).length);
       } catch (err) {
-        // Silently catch 500 errors to prevent UI crash
         setNotifications([]);
         setUnreadCount(0);
       }

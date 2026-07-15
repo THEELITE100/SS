@@ -9,11 +9,11 @@ const Navbar = () => {
   const dispatch = useDispatch();
   
   const { userInfo } = useSelector((state) => state.auth || {});
-  const isLoggedIn = Boolean(userInfo || localStorage.getItem('token'));
+  const isLoggedIn = Boolean(userInfo || sessionStorage.getItem('token'));
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userInfo');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userInfo');
     if (dispatch && { type: 'auth/logout' }) {
       dispatch({ type: 'auth/logout' });
     }
