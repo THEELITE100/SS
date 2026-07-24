@@ -3,9 +3,6 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
 const ClientProfile = require('../models/ClientProfile');
 
-// Fallback string prevents passport-google-oauth20 from throwing at boot
-// when Google credentials haven't been configured yet. Google login simply
-// won't work until real values are set in backend/.env.
 passport.use(
   new GoogleStrategy(
     {

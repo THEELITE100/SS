@@ -61,10 +61,6 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/admin', adminRoutes);
 
-// All 15 spec modules now have working endpoints. What's left is
-// deployment, a real Lighthouse pass, and Stripe Connect webhook hardening
-// (see README "Deployment" and "Stripe Connect" sections).
-
 app.use(notFound);
 app.use(errorHandler);
 

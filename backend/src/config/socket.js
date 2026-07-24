@@ -3,11 +3,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Conversation = require('../models/Conversation');
 
-// REST handles anything that needs a reliable request/response and
-// persistence (sending a message, creating a notification). Sockets are
-// used only for two things: pushing already-persisted events to the right
-// people in real time, and fully ephemeral signals like typing indicators
-// that were never meant to hit the database at all.
 const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
