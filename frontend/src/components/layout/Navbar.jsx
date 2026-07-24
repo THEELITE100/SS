@@ -1,86 +1,119 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import Button from '../common/Button';
-import NotificationDropdown from './NotificationDropdown';
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import Button from '../ui/Button';
+import { logoutUser } from '../../features/auth/authSlice';
 
-const Navbar = () => {
-  const navigate = useNavigate();
+function Logo() {
+  return (
+    <Link to="/" className="flex items-center gap-2">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <circle cx="14" cy="14" r="12.5" stroke="#1F5FE0" strokeWidth="1.5" />
+        <circle cx="14" cy="14" r="7" stroke="#1F5FE0" strokeWidth="1.5" strokeDasharray="2 2.5" />
+        <circle cx="14" cy="3.5" r="2" fill="#1F5FE0" />
+      </svg>
+      <span className="font-display text-lg font-medium tracking-tight text-ink">SkillSphere</span>
+    </Link>
+  );
+}
+
+function Navbar() {
+  const { status, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  
-  const { userInfo } = useSelector((state) => state.auth || {});
-  const isLoggedIn = Boolean(userInfo || sessionStorage.getItem('token'));
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('userInfo');
-    if (dispatch && { type: 'auth/logout' }) {
-      dispatch({ type: 'auth/logout' });
-    }
-    alert('Logged out successfully.');
-    navigate('/login');
-    window.location.reload();
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate('/');
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-        
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform">
-            S
-          </div>
-          <span className="text-xl font-black tracking-tight text-premium-dark">
-            Skill<span className="text-blue-600">Sphere</span>
-          </span>
-        </Link>
+    <header className="sticky top-0 z-50 border-b border-line/80 bg-paper/85 backdrop-blur-lg">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-8">
+        <Logo />
 
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/gigs" className="text-sm font-bold text-gray-600 hover:text-black transition-colors">
-            Explore Gigs
+        <div className="hidden items-center gap-8 md:flex">
+          <Link to="/gigs" className="text-sm text-graphite transition-colors hover:text-ink">
+            Browse gigs
           </Link>
-          <Link to="/freelancers" className="text-sm font-bold text-gray-600 hover:text-black transition-colors">
-            Talent
-          </Link>
-          {isLoggedIn && (
+          <a href="#how-it-works" className="text-sm text-graphite transition-colors hover:text-ink">
+            How it works
+          </a>
+          <a href="#trust" className="text-sm text-graphite transition-colors hover:text-ink">
+            Trust &amp; safety
+          </a>
+        </div>
+
+        <div className="hidden items-center gap-3 md:flex">
+          {status === 'authenticated' ? (
             <>
-              <Link to="/client/proposals" className="text-sm font-bold text-gray-600 hover:text-black transition-colors">
-                Proposals
-              </Link>
-              <Link to="/freelancer/edit-profile" className="text-sm font-bold text-gray-600 hover:text-black transition-colors">
-                Edit Profile
-              </Link>
-            </>
-          )}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          {isLoggedIn && <NotificationDropdown />}
-
-          {isLoggedIn ? (
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={() => navigate('/freelancer/dashboard')}>
+              <span className="text-sm text-graphite">Hi, {user?.name?.split(' ')[0]}</span>
+              {user?.role === 'admin' && (
+                <Button variant="secondary" size="sm" onClick={() => navigate('/admin')}>
+                  Admin
+                </Button>
+              )}
+              <Button variant="secondary" size="sm" onClick={() => navigate('/dashboard')}>
                 Dashboard
               </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Sign Out
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                Log out
               </Button>
-            </div>
+            </>
           ) : (
-            <div className="flex items-center gap-2.5">
-              <Button variant="outline" size="sm" onClick={() => navigate('/login')}>
-                Sign In
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+                Log in
               </Button>
               <Button variant="primary" size="sm" onClick={() => navigate('/register')}>
-                Get Started
+                Get started
               </Button>
-            </div>
+            </>
           )}
         </div>
 
-      </div>
+        <button
+          className="md:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
+          {mobileOpen ? <X className="h-6 w-6 text-ink" /> : <Menu className="h-6 w-6 text-ink" />}
+        </button>
+      </nav>
+
+      {mobileOpen && (
+        <div className="border-t border-line px-6 py-4 md:hidden">
+          <div className="flex flex-col gap-3">
+            <Link to="/gigs" className="py-1.5 text-sm text-graphite" onClick={() => setMobileOpen(false)}>
+              Browse gigs
+            </Link>
+            {status === 'authenticated' ? (
+              <>
+                <Button variant="secondary" onClick={() => navigate('/dashboard')}>
+                  Dashboard
+                </Button>
+                <Button variant="ghost" onClick={handleLogout}>
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => navigate('/login')}>
+                  Log in
+                </Button>
+                <Button variant="primary" onClick={() => navigate('/register')}>
+                  Get started
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
-};
+}
 
 export default Navbar;
